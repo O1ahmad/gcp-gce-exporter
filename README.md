@@ -31,7 +31,7 @@ The application can be run in a number of ways, the main consumption is the Dock
 Run manually from Docker Hub (**Note:** credentials file must exist within Container):
 ```
 podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
-           --env PROJECT="XXXXXXX" --publish 9686:9686 \
+           --env PROJECT="XXXXXXX" --publish 9692:9692 \
            --volume /home/user/gcp.creds.json:/path/to/creds.json \
            0Iabs/0x01.gcp-gce-exporter
 ```
