@@ -10,6 +10,6 @@ process:
     running: true
     skip: false
 port:
-  tcp6:9687:
+  tcp6:9692:
     listening: true
     skip: false
