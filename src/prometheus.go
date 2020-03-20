@@ -17,7 +17,7 @@ func (e *Exporter) resetMetrics() {
 	}
 }
 
-// Describe describes all the metrics ever exported by the AWS EC2 exporter
+// Describe describes all the metrics ever exported by the GCP GCE exporter
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 
 	for _, m := range e.gaugeVecs {
