@@ -1,219 +1,218 @@
 package main
 
 import (
-	"regexp"
-	"strconv"
-	"time"
-
+    "strings"
+    "golang.org/x/net/context"
+    "golang.org/x/oauth2/google"
+    "google.golang.org/api/compute/v1"
 	log "github.com/Sirupsen/logrus"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func (e *Exporter) gatherInstanceMetrics(ch chan<- prometheus.Metric) (*ec2.DescribeInstanceTypesOutput, error) {
+func (e *Exporter) gatherInstanceMetrics(ch chan<- prometheus.Metric) (*compute.MachineTypesListCall, error) {
 
-	var token *string
-	var result *ec2.DescribeInstanceTypesOutput
-	var err error
-	// Describe instance types while token indicates additional paged records
-	for ok := true; ok; ok = (token != nil) {
-		params := &ec2.DescribeInstanceTypesInput{
-			NextToken: token,
-		}
-		result, err := ec2svc.DescribeInstanceTypes(params)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+    ctx := context.Background()
+    computeClient, err := google.DefaultClient(ctx, compute.CloudPlatformScope)
+    if err != nil {
+        log.Fatal(err)
+    }
+    computeService, err := compute.New(computeClient)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-		log.Debug("DescribeInstanceTypes <RESULT>:", result)
+    result := computeService.MachineTypes.List(project, "us-east1-a")
+    if err := result.Pages(ctx, func(page *compute.MachineTypeList) error {
+        log.Debug("MachineTypes <RESULT>:", page.Items)
+        for _, machineType := range page.Items {
+            log.Debug("Data <machine>:", machineType)
 
-		for _, x := range result.InstanceTypes {
-			log.Debug("Data <instance>:", x)
-			// total number of vCPUs
+            s := strings.Split(machineType.Zone, "/")
+            z := s[len(s)-1]
 
-			var hypervisor = "unknown"
-			if x.Hypervisor != nil {
-				hypervisor = *x.Hypervisor
-			}
-			e.gaugeVecs["totalvCPUs"].With(prometheus.Labels{
-				"region":        region,
-				"instance_type": *x.InstanceType,
-				"hypervisor":    hypervisor,
-				"bare_metal":    strconv.FormatBool(*x.BareMetal),
-				"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-				"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-				"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-			}).Set(float64(*x.VCpuInfo.DefaultVCpus))
-
-			// vCPU maximum supported clockspeed
-			if x.ProcessorInfo.SustainedClockSpeedInGhz != nil {
-				e.gaugeVecs["clockSpeed"].With(prometheus.Labels{
-					"region":        region,
-					"instance_type": *x.InstanceType,
-					"hypervisor":    hypervisor,
-					"bare_metal":    strconv.FormatBool(*x.BareMetal),
-					"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-					"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-					"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-				}).Set(*x.ProcessorInfo.SustainedClockSpeedInGhz)
-			} else {
-				e.gaugeVecs["clockSpeed"].With(prometheus.Labels{
-					"region":        region,
-					"instance_type": *x.InstanceType,
-					"hypervisor":    hypervisor,
-					"bare_metal":    strconv.FormatBool(*x.BareMetal),
-					"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-					"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-					"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-				}).Set(-1)
-			}
-			// total main memory
-			e.gaugeVecs["totalMem"].With(prometheus.Labels{
-				"region":        region,
-				"instance_type": *x.InstanceType,
-				"hypervisor":    hypervisor,
-				"bare_metal":    strconv.FormatBool(*x.BareMetal),
-				"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-				"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-				"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-			}).Set(float64(*x.MemoryInfo.SizeInMiB))
-
-			// total disk storage
-			var storageSize = 0
-			if *x.InstanceStorageSupported {
-				storageSize = int(*x.InstanceStorageInfo.TotalSizeInGB)
-			}
-			e.gaugeVecs["totalStorage"].With(prometheus.Labels{
-				"region":        region,
-				"instance_type": *x.InstanceType,
-				"hypervisor":    hypervisor,
-				"bare_metal":    strconv.FormatBool(*x.BareMetal),
-				"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-				"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-				"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-			}).Set(float64(storageSize))
-
-			// EBS storage ONLY
-			var ebsOnly = 0
-			if !(*x.InstanceStorageSupported) {
-				ebsOnly = 1
-			}
-			e.gaugeVecs["ebsOnly"].With(prometheus.Labels{
-				"region":        region,
-				"instance_type": *x.InstanceType,
-				"hypervisor":    hypervisor,
-				"bare_metal":    strconv.FormatBool(*x.BareMetal),
-				"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-				"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-				"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-			}).Set(float64(ebsOnly))
-
-			// network bandwidth
-			re := regexp.MustCompile(`\d[\d,]*[\.]?[\d{2}]*`)
-			netSpeed, _ := strconv.ParseFloat(re.FindString(*x.NetworkInfo.NetworkPerformance), 4)
-			e.gaugeVecs["totalNet"].With(prometheus.Labels{
-				"region":        region,
-				"instance_type": *x.InstanceType,
-				"hypervisor":    hypervisor,
-				"bare_metal":    strconv.FormatBool(*x.BareMetal),
-				"free_tier":     strconv.FormatBool(*x.FreeTierEligible),
-				"current_gen":   strconv.FormatBool(*x.CurrentGeneration),
-				"hibernation":   strconv.FormatBool(*x.HibernationSupported),
-			}).Set(netSpeed)
-		}
-
-		// Assign next token for continued processing
-		token = result.NextToken
-	}
+            e.gaugeVecs["totalvCPUs"].With(prometheus.Labels{
+                "instance_type": machineType.Name,
+                "region":        region,
+                "zone":          z,
+            }).Set(float64(machineType.GuestCpus))
+            e.gaugeVecs["totalMem"].With(prometheus.Labels{
+                "instance_type": machineType.Name,
+                "region":        region,
+                "zone":          z,
+            }).Set(float64(machineType.MemoryMb))
+            e.gaugeVecs["maxStorage"].With(prometheus.Labels{
+                "instance_type": machineType.Name,
+                "region":        region,
+                "zone":          z,
+            }).Set(float64(machineType.MaximumPersistentDisksSizeGb))
+            e.gaugeVecs["maxDisks"].With(prometheus.Labels{
+                "instance_type": machineType.Name,
+                "region":        region,
+                "zone":          z,
+            }).Set(float64(machineType.MaximumPersistentDisks))
+        }
+        
+        return nil
+    }); err != nil {
+         log.Fatal(err)
+    }
 
 	return result, err
 
 }
 
-func (e *Exporter) gatherImageMetrics(ch chan<- prometheus.Metric) (*ec2.DescribeImagesOutput, error) {
+func (e *Exporter) gatherImageMetrics(ch chan<- prometheus.Metric) (*compute.ImagesListCall, error) {
 
-	params := &ec2.DescribeImagesInput{}
-	result, err := ec2svc.DescribeImages(params)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+    ctx := context.Background()
+    computeClient, err := google.DefaultClient(ctx, compute.CloudPlatformScope)
+    if err != nil {
+        log.Fatal(err)
+    }
+    computeService, err := compute.New(computeClient)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	log.Debug("DescribeImages <RESULT>:", result)
+    result := computeService.Images.List(project)
+    if err := result.Pages(ctx, func(page *compute.ImageList) error {
+        log.Debug("ImageList <RESULT>:", page.Items)
+        for _, image := range page.Items {
+            log.Debug("Data <image>:", image)
 
-	for _, x := range result.Images {
-		log.Debug("Data <image>:", x)
-		e.counterVecs["total_images"].With(prometheus.Labels{
-			"architecture":        *x.Architecture,
-			"hypervisor":          *x.Hypervisor,
-			"image_type":          *x.ImageType,
-			"root_device_type":    *x.RootDeviceType,
-			"state":               *x.State,
-			"virtualization_type": *x.VirtualizationType,
-		}).Inc()
-	}
+            e.gaugeVecs["imgArchiveSize"].With(prometheus.Labels{
+                "name":          image.Name,
+                "family":        image.Family,
+                "src_img":       image.SourceImage,
+            }).Set(float64(image.ArchiveSizeBytes))
+            e.gaugeVecs["imgDiskSize"].With(prometheus.Labels{
+                "name":          image.Name,
+                "family":        image.Family,
+                "src_img":       image.SourceImage,
+            }).Set(float64(image.DiskSizeGb))
+            e.counterVecs["totalImages"].With(prometheus.Labels{
+                "family":        image.Family,
+                "src_img":       image.SourceImage,
+			}).Inc()
+        }
 
-	return result, err
-
-}
-
-func (e *Exporter) gatherRegionMetrics(ch chan<- prometheus.Metric) (*ec2.DescribeRegionsOutput, error) {
-
-	params := &ec2.DescribeRegionsInput{}
-	result, err := ec2svc.DescribeRegions(params)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	log.Debug("DescribeRegions <RESULT>:", result)
-
-	for _, x := range result.Regions {
-		log.Debug("Data <region>:", x)
-		e.counterVecs["total_regions"].With(prometheus.Labels{
-			"name":         *x.RegionName,
-			"endpoint":     *x.Endpoint,
-			"optin_status": *x.OptInStatus,
-		}).Inc()
-	}
+        return nil
+    }); err != nil {
+         log.Fatal(err)
+    }
 
 	return result, err
 
 }
 
-func (e *Exporter) gatherSpotMetrics(ch chan<- prometheus.Metric) (*ec2.DescribeSpotPriceHistoryOutput, error) {
+func (e *Exporter) gatherDiskMetrics(ch chan<- prometheus.Metric) (*compute.DiskTypesListCall, error) {
 
-	var token *string
-	var result *ec2.DescribeSpotPriceHistoryOutput
-	var err error
-	// Describe historical spot prices for each instance within the past second
-	for ok := true; ok; ok = (len(*token) > 0) {
-		start := time.Now().Add(-(time.Second * 1))
-		end := time.Now()
-		params := &ec2.DescribeSpotPriceHistoryInput{
-			NextToken: token,
-			StartTime: &start,
-			EndTime:   &end,
-		}
-		result, err := ec2svc.DescribeSpotPriceHistory(params)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+    ctx := context.Background()
+    computeClient, err := google.DefaultClient(ctx, compute.CloudPlatformScope)
+    if err != nil {
+        log.Fatal(err)
+    }
+    computeService, err := compute.New(computeClient)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-		log.Debug("Length:", len(result.SpotPriceHistory))
-		log.Debug("DescribeSpotHistory <RESULT>:", result)
+    result := computeService.DiskTypes.List(project, zone)
+    if err := result.Pages(ctx, func(page *compute.DiskTypeList) error {
+        log.Debug("DiskTypeList <RESULT>:", page.Items)
+        for _, dt := range page.Items {
+            log.Debug("Data <image>:", dt)
 
-		for _, x := range result.SpotPriceHistory {
-			log.Debug("SpotPrice <instance>:", x)
-			var spotPrice, _ = strconv.ParseFloat(*x.SpotPrice, 4)
-			e.gaugeVecs["spot_price"].With(prometheus.Labels{
-				"availability_zone":   *x.AvailabilityZone,
-				"instance_type":       *x.InstanceType,
-				"product_description": *x.ProductDescription,
-			}).Set(float64(spotPrice))
-		}
+            s := strings.Split(dt.Zone, "/")
+            z := s[len(s)-1]
 
-		// Assign next token for continued processing
-		token = result.NextToken
-	}
+            e.gaugeVecs["diskTypeSize"].With(prometheus.Labels{
+                "name":          dt.Name,
+                "valid_disk_size": dt.ValidDiskSize,
+                "region":        region,
+                "zone":          z,
+            }).Set(float64(dt.DefaultDiskSizeGb))
+            e.counterVecs["totalDiskTypes"].With(prometheus.Labels{
+                "valid_disk_size": dt.ValidDiskSize,
+                "region":        region,
+                "zone":          z,
+			}).Inc()
+
+        }
+
+        return nil
+    }); err != nil {
+         log.Fatal(err)
+    }
+
+	return result, err
+
+}
+
+func (e *Exporter) gatherRegionMetrics(ch chan<- prometheus.Metric) (*compute.RegionsListCall, error) {
+
+    ctx := context.Background()
+    computeClient, err := google.DefaultClient(ctx, compute.CloudPlatformScope)
+    if err != nil {
+        log.Fatal(err)
+    }
+    computeService, err := compute.New(computeClient)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    result := computeService.Regions.List(project)
+    if err := result.Pages(ctx, func(page *compute.RegionList) error {
+        log.Debug("RegionList <RESULT>:", page.Items)
+        for _, region := range page.Items {
+            log.Debug("Data <region>:", region)
+
+            e.counterVecs["totalRegions"].With(prometheus.Labels{
+                "name": region.Name,
+                "status": region.Status,
+			}).Inc()
+        }
+
+        return nil
+    }); err != nil {
+         log.Fatal(err)
+    }
+
+	return result, err
+
+}
+
+func (e *Exporter) gatherZoneMetrics(ch chan<- prometheus.Metric) (*compute.ZonesListCall, error) {
+
+    ctx := context.Background()
+    computeClient, err := google.DefaultClient(ctx, compute.CloudPlatformScope)
+    if err != nil {
+        log.Fatal(err)
+    }
+    computeService, err := compute.New(computeClient)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    result := computeService.Zones.List(project)
+    if err := result.Pages(ctx, func(page *compute.ZoneList) error {
+        log.Debug("ZoneList <RESULT>:", page.Items)
+        for _, zone := range page.Items {
+            log.Debug("Data <zone>:", zone)
+
+            s := strings.Split(zone.Region, "/")
+            r := s[len(s)-1]
+
+            e.counterVecs["totalZones"].With(prometheus.Labels{
+                "name": zone.Name,
+                "status": zone.Status,
+                "region": r,
+			}).Inc()
+        }
+        
+        return nil
+    }); err != nil {
+         log.Fatal(err)
+    }
 
 	return result, err
 

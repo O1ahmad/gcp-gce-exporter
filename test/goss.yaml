@@ -1,15 +1,15 @@
 file:
-  /usr/bin/aws_ec2_exporter:
+  /usr/bin/gcp-gceexporter:
     exists: true
     mode: "0755"
     owner: root
     group: root
     filetype: file
 process:
-  aws_ec2_exporte:
+  gcp-gceexporte:
     running: true
     skip: false
 port:
-  tcp6:9686:
+  tcp6:9687:
     listening: true
     skip: false

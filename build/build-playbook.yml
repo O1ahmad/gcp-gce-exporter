@@ -1,5 +1,5 @@
 ---
-- name: Playbook for building 0x01 AWS-EC2 Prometheus exporter images
+- name: Playbook for building 0x01 GCP-GCE Prometheus exporter images
   hosts: localhost
   tasks:
     - name: Load build arguments
@@ -9,14 +9,14 @@
       when: build_images
       command:
         chdir: "{{ playbook_dir.split('/')[0:-1]|join('/') }}"
-        cmd: "docker build --file {{ playbook_dir }}/Containerfile --tag staged-aws-ec2-exporter:{{ exporter_version }} ."
+        cmd: "docker build --file {{ playbook_dir }}/Containerfile --tag staged-gcp-gce-exporter:{{ exporter_version }} ."
     - name: Re-tag image for public release/push
       when: push_images
       command:
         chdir: "{{ playbook_dir.split('/')[0:-1]|join('/') }}"
-        cmd: "docker tag staged-aws-ec2-exporter:{{ exporter_version }} 0labs/0x01.aws-ec2-exporter:{{ exporter_version }}"
+        cmd: "docker tag staged-gcp-gce-exporter:{{ exporter_version }} 0labs/0x01.gcp-gce-exporter:{{ exporter_version }}"
     - name: Push image to the public Dockerhub repository
       when: push_images
       command:
         chdir: "{{ playbook_dir.split('/')[0:-1]|join('/') }}"
-        cmd: "docker push 0labs/0x01.aws-ec2-exporter:{{ exporter_version }}"
+        cmd: "docker push 0labs/0x01.gcp-gce-exporter:{{ exporter_version }}"
