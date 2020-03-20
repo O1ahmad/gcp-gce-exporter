@@ -15,7 +15,7 @@
   name = "github.com/0x0I/gcp-gce-exporter"
   packages = ["src/config"]
   pruneopts = "UT"
-  revision = "c4412b36d65c39e608527bad5dd97cde5f10bb1b"
+  revision = "99f9e90a9099af34c9b6db974b19fa42c756f298"
 
 [[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
