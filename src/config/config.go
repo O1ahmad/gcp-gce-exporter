@@ -15,12 +15,12 @@ func GetEnv(key, fallback string) string {
 	return value
 }
 
-// CheckConfig ensures environment has been configured with AWS API access credentials
+// CheckConfig ensures environment has been configured with GCP API access credentials
 func CheckConfig() {
-	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		log.Error("*Required* key ID not set for AWS API Access.")
+	if os.Getenv("GOOGLE_APPLICATION_CREDENTIALS") == "" {
+		log.Error("*Required* key ID not set for Google application access.")
 	}
-	if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-		log.Error("*Required* API access secret key not.")
+	if os.Getenv("PROJECT") == "" {
+		log.Error("*Required* project name not set for Google application access.")
 	}
 }

@@ -3,35 +3,33 @@ package main
 import (
 	"net/http"
 
-	c "github.com/0x0I/aws_ec2_exporter/src/config"
+	c "github.com/0x0I/gcp-gce-exporter/src/config"
 	log "github.com/Sirupsen/logrus"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
-	namespace = "aws_ec2" // Used to prepand Prometheus metrics
+	namespace = "gcp_gce" // Used to prepand Prometheus metrics
 )
 
 // Runtime variables
 var (
 	metricsPath = c.GetEnv("METRICS_PATH", "/metrics") // Path under which to expose metrics
-	listenPort  = c.GetEnv("LISTEN_PORT", ":9686")     // Port on which to expose metrics
+	listenPort  = c.GetEnv("LISTEN_PORT", ":9687")     // Port on which to expose metrics
 	logLevel    = c.GetEnv("LOG_LEVEL", "info")
-	region      = c.GetEnv("REGION", "us-east-1")
 
-	ec2svc = ec2.New(session.New(&aws.Config{Region: aws.String(region)})) // EC2 API session/service client
+	region      = c.GetEnv("REGION", "us-east1")
+	zone        = c.GetEnv("ZONE", "us-east1-a")
+    project     = c.GetEnv("PROJECT", "")
 )
 
 func main() {
 	c.CheckConfig()
 
 	setLogLevel(logLevel)
-	log.Info("Starting Prometheus AWS EC2 Exporter")
+	log.Info("Starting Prometheus GCP GCE Exporter")
 
 	exporter := newExporter()
 	prometheus.MustRegister(exporter)
@@ -39,9 +37,9 @@ func main() {
 	http.Handle(metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
-      <head><title>AWS EC2 Exporter</title></head>
+      <head><title>GCP GCE Exporter</title></head>
       <body>
-      <h1>AWS EC2 Exporter</h1>
+      <h1>GCP GCE Exporter</h1>
       <p><a href=` + metricsPath + `>Metrics</a></p>
       </body>
       </html>`))

@@ -6,7 +6,7 @@ set -euo pipefail
 [ -n "${DEBUG:-""}" ] && set -x
 
 # [Test-Setup]
-docker build --file build/Containerfile --tag aws-ec2-exporter:testing .
+docker build --file build/Containerfile --tag gcp-gce-exporter:testing .
 
 # [Test-Run+Validate]
-GOSS_FILES_PATH=test dgoss run aws-ec2-exporter:testing
+GOSS_FILES_PATH=test dgoss run gcp-gce-exporter:testing

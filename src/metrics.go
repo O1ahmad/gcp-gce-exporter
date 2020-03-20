@@ -13,62 +13,77 @@ func AddMetrics() (map[string]*prometheus.GaugeVec, map[string]*prometheus.Count
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "total_vcpus",
-			Help:      "Total virtual CPUs capacity provided by an instance-type",
-		}, []string{"region", "instance_type", "hypervisor", "bare_metal", "free_tier", "current_gen", "hibernation"})
-	gaugeVecs["clockSpeed"] = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "vcpus_clockspeed",
-			Help:      "Clock speed(Ghz) of vCPUs provided by an instance-type",
-		}, []string{"region", "instance_type", "hypervisor", "bare_metal", "free_tier", "current_gen", "hibernation"})
+			Help:      "Total virtual CPUs capacity provided by a machine-type",
+		}, []string{"instance_type", "region", "zone"})
 	gaugeVecs["totalMem"] = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "total_mem",
-			Help:      "Total memory capacity(GiB) provided by an instance-type",
-		}, []string{"region", "instance_type", "hypervisor", "bare_metal", "free_tier", "current_gen", "hibernation"})
-	gaugeVecs["totalStorage"] = prometheus.NewGaugeVec(
+			Help:      "Total memory capacity(GiB) provided by a machine-type",
+		}, []string{"instance_type", "region", "zone"})
+	gaugeVecs["maxStorage"] = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
-			Name:      "total_disk",
-			Help:      "Total disk storage capacity(GiB) provided by an instance-type",
-		}, []string{"region", "instance_type", "hypervisor", "bare_metal", "free_tier", "current_gen", "hibernation"})
-	gaugeVecs["ebsOnly"] = prometheus.NewGaugeVec(
+			Name:      "max_storage",
+			Help:      "Maximum persistent disk storage capacity(GiB) provided by a machine-type",
+		}, []string{"instance_type", "region", "zone"})
+	gaugeVecs["maxDisks"] = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
-			Name:      "ebs_only",
-			Help:      "Whether an instance_type *only* supports EBS as its root device volume",
-		}, []string{"region", "instance_type", "hypervisor", "bare_metal", "free_tier", "current_gen", "hibernation"})
-	gaugeVecs["totalNet"] = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: namespace,
-			Name:      "total_net",
-			Help:      "Total network bandwidth(Gbps) capacity provided by an instance-type",
-		}, []string{"region", "instance_type", "hypervisor", "bare_metal", "free_tier", "current_gen", "hibernation"})
+			Name:      "max_disk",
+			Help:      "Maximum persistent disks allowed by a machine-type",
+		}, []string{"instance_type", "region", "zone"})
 
 	// image metrics
-	counterVecs["total_images"] = prometheus.NewCounterVec(
+	counterVecs["totalImages"] = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "total_images",
 			Help:      "Total count of publically available images",
-		}, []string{"architecture", "hypervisor", "image_type", "root_device_type", "state", "virtualization_type"})
+		}, []string{"family", "src_img"})
+	gaugeVecs["imgArchiveSize"] = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "image_archive_size",
+			Help:      "Size of the image tar.gz archive stored in Google Cloud Storage (in bytes).",
+        }, []string{"name", "family", "src_img"})
+	gaugeVecs["imgDiskSize"] = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "image_disk_size",
+			Help:      "Size of the image when restored onto a persistent disk (in GB).",
+        }, []string{"name", "family", "src_img"})
 
-	// region metrics
-	counterVecs["total_regions"] = prometheus.NewCounterVec(
+	// disk type metrics
+	gaugeVecs["diskTypeSize"] = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "disk_type_size",
+			Help:      "Server-defined default disk size in GB",
+		}, []string{"name", "valid_disk_size", "region", "zone"})
+
+	counterVecs["totalDiskTypes"] = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: namespace,
+			Name:      "total_disk_types",
+			Help:      "Total count of disk types per zone",
+		}, []string{"valid_disk_size", "region", "zone"})
+
+    // region metrics 
+	counterVecs["totalRegions"] = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "total_regions",
-			Help:      "Total count of publically accessible EC2 regions",
-		}, []string{"name", "endpoint", "optin_status"})
+			Help:      "Total count of publically accessible GCP regions",
+		}, []string{"name", "status"})
 
-	// spot instance metrics
-	gaugeVecs["spot_price"] = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	// zone metrics
+	counterVecs["totalZones"] = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Namespace: namespace,
-			Name:      "spot_price",
-			Help:      "Spot price of EC2 instance types",
-		}, []string{"availability_zone", "instance_type", "product_description"})
+			Name:      "total_zones",
+			Help:      "Total count of publically accessible GCP zones",
+		}, []string{"name", "region", "status"})
 
 	return gaugeVecs, counterVecs
 

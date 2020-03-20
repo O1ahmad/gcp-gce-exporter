@@ -23,6 +23,9 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	for _, m := range e.gaugeVecs {
 		m.Describe(ch)
 	}
+	for _, m := range e.counterVecs {
+		m.Describe(ch)
+	}
 }
 
 // Collect function, called on by Prometheus Client library
@@ -36,8 +39,9 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.resetMetrics() // Clean starting point
 	e.gatherInstanceMetrics(ch)
 	e.gatherImageMetrics(ch)
+	e.gatherDiskMetrics(ch)
 	e.gatherRegionMetrics(ch)
-	e.gatherSpotMetrics(ch)
+	e.gatherZoneMetrics(ch)
 
 	for _, m := range e.gaugeVecs {
 		m.Collect(ch)

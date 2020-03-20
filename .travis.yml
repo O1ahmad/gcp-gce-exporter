@@ -9,5 +9,5 @@ before_script:
 
 script:
   - golint .
-  - docker build --file build/Containerfile --tag aws-ec2-exporter:testing .
-  - GOSS_FILES_PATH=test dgoss run aws-ec2-exporter:testing
+  - docker build --file build/Containerfile --tag gcp-gce-exporter:testing .
+  - GOSS_FILES_PATH=test dgoss run gcp-gce-exporter:testing

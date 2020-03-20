@@ -15,4 +15,4 @@ vendor
 *.test
 *.prof
 
-aws_ec2_exporter
+gcp-gce-exporter
