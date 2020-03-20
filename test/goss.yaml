@@ -1,12 +1,12 @@
 file:
-  /usr/bin/gcp-gceexporter:
+  /usr/bin/gcp-gce-exporter:
     exists: true
     mode: "0755"
     owner: root
     group: root
     filetype: file
 process:
-  gcp-gceexporte:
+  gcp-gce-exporte:
     running: true
     skip: false
 port:
