@@ -40,19 +40,19 @@ func AddMetrics() (map[string]*prometheus.GaugeVec, map[string]*prometheus.Count
 			Namespace: namespace,
 			Name:      "total_images",
 			Help:      "Total count of publically available images",
-		}, []string{"family", "src_img"})
+		}, []string{"project", "family", "src_img"})
 	gaugeVecs["imgArchiveSize"] = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "image_archive_size",
 			Help:      "Size of the image tar.gz archive stored in Google Cloud Storage (in bytes).",
-		}, []string{"name", "family", "src_img"})
+		}, []string{"project", "name", "family", "src_img"})
 	gaugeVecs["imgDiskSize"] = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "image_disk_size",
 			Help:      "Size of the image when restored onto a persistent disk (in GB).",
-		}, []string{"name", "family", "src_img"})
+		}, []string{"project", "name", "family", "src_img"})
 
 	// disk type metrics
 	gaugeVecs["diskTypeSize"] = prometheus.NewGaugeVec(

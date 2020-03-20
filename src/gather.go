@@ -86,16 +86,19 @@ func (e *Exporter) gatherImageMetrics(ch chan<- prometheus.Metric) (*compute.Ima
 				log.Debug("Data <image>:", image)
 
 				e.gaugeVecs["imgArchiveSize"].With(prometheus.Labels{
+					"project": proj,
 					"name":    image.Name,
 					"family":  image.Family,
 					"src_img": image.SourceImage,
 				}).Set(float64(image.ArchiveSizeBytes))
 				e.gaugeVecs["imgDiskSize"].With(prometheus.Labels{
+					"project": proj,
 					"name":    image.Name,
 					"family":  image.Family,
 					"src_img": image.SourceImage,
 				}).Set(float64(image.DiskSizeGb))
 				e.counterVecs["totalImages"].With(prometheus.Labels{
+					"project": proj,
 					"family":  image.Family,
 					"src_img": image.SourceImage,
 				}).Inc()
