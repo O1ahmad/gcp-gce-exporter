@@ -17,52 +17,55 @@ Exposes compute resource statistics of GCP GCE machine-types, images and regions
 The application can be run in a number of ways, the main consumption is the Docker hub image `0x0I.gcp-gce-exporter`.
 
 **Required**
-* `AWS_ACCESS_KEY_ID`      - API access key id of your AWS cloud account
-* `AWS_SECRET_ACCESS_KEY`  - API access key secret of your AWS cloud account
+* `GOOGLE_APPLICATION_CREDENTIALS`      - path to json file containing service account key and authentication credentials 
+* `PROJECT`                             - Google Cloud Platform API authorized and capable Google Cloud project
 
 **Optional**
 * `METRICS_PATH`           - Path under which to expose metrics. Defaults to `/metrics`
-* `LISTEN_PORT`            - Port on which to expose metrics. Defaults to `9686`
-* `REGION`                 - EC2 region to scrape. Defaults to `us-east-1`
+* `LISTEN_PORT`            - Port on which to expose metrics. Defaults to `9692`
+* `REGION`                 - EC2 region to scrape. Defaults to `us-east1`
 * `LOG_LEVEL`              - Set the logging level. Defaults to `info`
 
 ## Install and deploy
 
-Run manually from Docker Hub:
+Run manually from Docker Hub (**Note:** credentials file must exist within Container):
 ```
-podman run -d -e AWS_ACCESS_KEY_ID="XXXXXXXX" -e AWS_SECRET_ACCESS_KEY="XXXXXXX" -p 9686:9686 0Iabs/0x01.aws-ec2-exporter
+podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
+           --env PROJECT="XXXXXXX" --publish 9686:9686 \
+           --volume /home/user/gcp.creds.json:/path/to/creds.json \
+           0Iabs/0x01.gcp-gce-exporter
 ```
 
-Scrape non-default AWS EC2 region and increase logging level:
+Scrape non-default GCP GCE region and increase logging level:
 ```
-podman run --detach --env AWS_ACCESS_KEY_ID="XXXXXXXX" \
-           --env AWS_SECRET_ACCESS_KEY="XXXXXXX" \
-           --env REGION=us-west-2 \
+podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
+           --env PROJECT="XXXXXXX" \
+           --env REGION=asia-southeast1 \
            --env LOG_LEVEL=debug \
-           --publish 9686:9686 \
-           0Iabs/0x01.aws-ec2-exporter
+           --publish 9692:9692 \
+           0Iabs/0x01.gcp-gce-exporter
 ```
 
 Build a container image:
 ```
 podman build --file build/Containerfile --tag <image-name> .
-podman run -d -e AWS_ACCESS_KEY_ID="XXXXXXXX" -e AWS_SECRET_ACCESS_KEY="XXXXXXX" -p 9686:9686 <image-name>
+podman run -d -e GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" -e PROJECT="XXXXXXX" -p 9692:9692 <image-name>
 ```
 
 ## Docker compose
 
 ```
-aws-ec2-exporter:
+gcp-gce-exporter:
   tty: true
   stdin_open: true
   environment:
-    - AWS_ACCESS_KEY_ID="XXXXXXXX"
-    - AWS_SECRET_ACCESS_KEY="XXXXXXX"
+    - GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json"
+    - PROJECT="XXXXXXX"
   expose:
-    - 9686:9686
-  image: 0Iabs/aws-ec2-exporter:latest
+    - 9692:9692
+  image: 0Iabs/gcp-gce-exporter:latest
 ```
 
 ## Metrics
 
-Metrics will be made available on port 9686 by default, or you can pass environment variable ```LISTEN_ADDRESS``` to override this. An example printout of the metrics you should expect to see can be found in [METRICS.md](https://github.com/0x0I/aws_ec2_exporter/blob/master/METRICS.md).
+Metrics will be made available on port 9692 by default, or you can pass environment variable ```LISTEN_ADDRESS``` to override this. An example printout of the metrics you should expect to see can be found in [METRICS.md](https://github.com/0x0I/gcp-gce-exporter/blob/master/METRICS.md).
