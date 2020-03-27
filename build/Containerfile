@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-MAINTAINER 0xO1
+LABEL maintainer="O1.IO"
 
 EXPOSE 9692
 
