@@ -13,7 +13,7 @@ type Exporter struct {
 	counterVecs map[string]*prometheus.CounterVec
 }
 
-// NewExporter creates the metrics we wish to monitor
+// newExporter creates the metrics we wish to monitor
 func newExporter() *Exporter {
 
 	gaugeVecs, counterVecs := AddMetrics()
