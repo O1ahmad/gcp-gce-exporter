@@ -68,4 +68,4 @@ gcp-gce-exporter:
 
 ## Metrics
 
-Metrics will be made available on port 9692 by default, or you can pass environment variable ```LISTEN_ADDRESS``` to override this. An example printout of the metrics you should expect to see can be found in [METRICS.md](https://github.com/0x0I/gcp-gce-exporter/blob/master/METRICS.md).
+Metrics will be made available on port **9692** by default, or you can pass environment variable ```LISTEN_ADDRESS``` to override this. An example printout of the metrics you should expect to see can be found in [METRICS.md](https://github.com/0x0I/gcp-gce-exporter/blob/master/METRICS.md).
