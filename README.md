@@ -14,7 +14,7 @@ Exposes compute resource statistics of GCP GCE machine-types, images and regions
 
 ## Description
 
-The application can be run in a number of ways, the main consumption is the Docker hub image `0x0I.gcp-gce-exporter`.
+The application can be run in a number of ways though its main consumption is via the Docker hub image `0x0I.gcp-gce-exporter`.
 
 **Required**
 * `GOOGLE_APPLICATION_CREDENTIALS`      - path to json file containing service account key and authentication credentials 
