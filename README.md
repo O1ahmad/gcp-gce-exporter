@@ -17,8 +17,10 @@ Exposes compute resource statistics of GCP GCE machine-types, images and regions
 The application can be run in a number of ways though its main consumption is via the Docker hub image `0x0I.gcp-gce-exporter`.
 
 **Required**
-* `GOOGLE_APPLICATION_CREDENTIALS`      - path to json file containing service account key and authentication credentials 
-* `PROJECT`                             - Google Cloud Platform API authorized and capable Google Cloud project
+* `PROJECT`                                   - Google Cloud Platform API authorized and capable Google Cloud project
+* `GOOGLE_APPLICATION_CREDENTIALS`            - path to file containing service account key and authentication credentials (**requires file mount into container**)
+              *or*
+  `GOOGLE_APPLICATION_CREDENTIALS_JSON`       - json blob containing service account key and authentication credentials
 
 **Optional**
 * `METRICS_PATH`           - Path under which to expose metrics. Defaults to `/metrics`

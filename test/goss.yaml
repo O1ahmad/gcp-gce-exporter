@@ -5,11 +5,18 @@ file:
     owner: root
     group: root
     filetype: file
-process:
-  gcp-gce-exporte:
-    running: true
-    skip: false
-port:
-  tcp6:9692:
-    listening: true
-    skip: false
+  /tmp/gcp_creds.json:
+    exists: true
+    owner: exporter
+    filetype: file
+    contains:
+      - secret
+      - json
+
+user:
+  exporter:
+    exists: true
+    home: /home/exporter
+package:
+  bash:
+    installed: true
