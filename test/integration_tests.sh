@@ -9,4 +9,4 @@ set -euo pipefail
 docker build --file build/Containerfile --tag gcp-gce-exporter:testing .
 
 # [Test-Run+Validate]
-GOSS_FILES_PATH=test dgoss run gcp-gce-exporter:testing
+GOSS_FILES_PATH=test dgoss run -e GOOGLE_APPLICATION_CREDENTIALS_JSON='{ "secret": "json"}' gcp-gce-exporter:testing sleep infinity

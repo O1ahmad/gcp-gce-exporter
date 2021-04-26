@@ -4,6 +4,8 @@ LABEL maintainer="O1.IO"
 
 EXPOSE 9692
 
+ENV GO111MODULE="off" GOPATH="/go"
+
 RUN apk --update add --no-cache ca-certificates git && go get github.com/golang/dep/cmd/dep
 
 WORKDIR /go/src/github.com/0x0I/gcp-gce-exporter
@@ -11,12 +13,22 @@ COPY Gopkg.toml Gopkg.lock ./
 RUN dep ensure --vendor-only
 
 COPY src/ /go/src/github.com/0x0I/gcp-gce-exporter/
-RUN GOPATH=/go go get && GOPATH=/go go build -o /bin/gcp-gce-exporter
+RUN go get && go build -o /bin/gcp-gce-exporter
 
 FROM alpine:latest
+
+RUN apk --update add --no-cache bash
+
 COPY --from=builder /bin/gcp-gce-exporter /usr/bin/gcp-gce-exporter
-ENTRYPOINT [ "gcp-gce-exporter" ]
+
+COPY ./scripts /scripts
+COPY ./entrypoints /entrypoint.d
+
+RUN chmod -R 755 /scripts/
 
 ENV EXPORTER_USER=exporter
-RUN addgroup -S $EXPORTER_USER && adduser --no-create-home --system $EXPORTER_USER $EXPORTER_USER
+RUN addgroup -S $EXPORTER_USER && adduser --system $EXPORTER_USER $EXPORTER_USER
 USER $EXPORTER_USER
+
+ENTRYPOINT [ "/scripts/entrypoint.sh" ]
+CMD [ "/scripts/start-exporter.sh" ]
