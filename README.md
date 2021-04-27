@@ -19,8 +19,7 @@ The application can be run in a number of ways though its main consumption is vi
 **Required**
 * `PROJECT`                                   - Google Cloud Platform API authorized and capable Google Cloud project
 * `GOOGLE_APPLICATION_CREDENTIALS`            - path to file containing service account key and authentication credentials (**requires file mount into container**)
-              *or*
-  `GOOGLE_APPLICATION_CREDENTIALS_JSON`       - json blob containing service account key and authentication credentials
+* `GOOGLE_APPLICATION_CREDENTIALS_JSON`       - json blob containing service account key and authentication credentials (*to be used in place of* `GOOGLE_APPLICATION_CREDENTIALS`)
 
 **Optional**
 * `METRICS_PATH`           - Path under which to expose metrics. Defaults to `/metrics`
