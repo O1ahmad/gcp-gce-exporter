@@ -2,3 +2,4 @@ exporter_version: 0.1.1
 
 build_images: false
 push_images: false
+make_latest: false
