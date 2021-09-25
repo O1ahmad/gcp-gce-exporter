@@ -31,7 +31,7 @@ The application can be run in a number of ways though its main consumption is vi
 
 Run manually from Docker Hub (**Note:** credentials file must exist within Container):
 ```
-podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
+docker run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
            --env PROJECT="XXXXXXX" --publish 9692:9692 \
            --volume /home/user/gcp.creds.json:/path/to/creds.json \
            0Iabs/0x01.gcp-gce-exporter
@@ -39,7 +39,7 @@ podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
 
 Scrape non-default GCP GCE region and increase logging level:
 ```
-podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
+docker run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
            --env PROJECT="XXXXXXX" \
            --env REGION=asia-southeast1 \
            --env LOG_LEVEL=debug \
@@ -49,8 +49,8 @@ podman run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
 
 Build a container image:
 ```
-podman build --file build/Containerfile --tag <image-name> .
-podman run -d -e GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" -e PROJECT="XXXXXXX" -p 9692:9692 <image-name>
+docker build --file build/Containerfile --tag <image-name> .
+docker run -d -e GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" -e PROJECT="XXXXXXX" -p 9692:9692 <image-name>
 ```
 
 ## Docker compose
