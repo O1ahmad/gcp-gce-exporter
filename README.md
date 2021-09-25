@@ -55,7 +55,11 @@ podman run -d -e GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" -e PROJECT
 
 ## Docker compose
 
-```gcp-gce-exporter:
+```
+version: "3"
+
+services:
+ gcp-gce-exporter:
     image: 0labs/0x01.gcp-gce-exporter:0.1.0
     container_name: gcp-exporter
     environment:
