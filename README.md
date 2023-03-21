@@ -47,7 +47,7 @@ docker run --detach --env GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" \
            0Iabs/0x01.gcp-gce-exporter
 ```
 
-Build a container image:
+Build and run a local container image:
 ```
 docker build --file build/Containerfile --tag <image-name> .
 docker run -d -e GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" -e PROJECT="XXXXXXX" -p 9692:9692 <image-name>
